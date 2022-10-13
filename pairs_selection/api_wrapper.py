@@ -1,5 +1,6 @@
 import csv
 import requests
+import copy
 
 class alph_settings: 
     def __init__(self, apikey, site, date_range): 
@@ -9,7 +10,7 @@ class alph_settings:
 
 class val_steps(alph_settings): 
 
-    def get_valid_tkers(self, function = "LISTING_STATUS", date_range = None):
+    def get_tkers(self, function = "LISTING_STATUS", date_range = None):
         if date_range == None: 
             date_lst = sorted(self.date_range)
         else: 
@@ -21,12 +22,30 @@ class val_steps(alph_settings):
             decode_content = r.content.decode("utf-8")
             content = csv.reader(decode_content.splitlines(), delimiter = ",")
             lst_dict[i] = list(content)
-        #check if tickers match
-        key_lst = [i for i in lst_dict.keys()]
-        recon_lst = lst_dict[key_lst[0]]
-        recon_lst
-            
         return lst_dict
+
+    def tker_maintain(lst_dict):
+        key_lst = [i for i in lst_dict.keys()]
+        maintain_lst = copy.copy(lst_dict[key_lst[0]])
+        counter_lst = [0 for i in range(len(key_lst))]
+        for j in range(len(lst_dict[key_lst[0]])): 
+            chk_lst = [lst_dict[key_lst[i]][j][0] for i in range(len(key_lst))]
+            for k in range(1, len(chk_lst)):
+                if chk_lst[0] == chk_lst[k]: 
+                    print(chk_lst[k])
+                    pass
+                else:
+                    #maintain_lst.pop(j)
+                    pass
+        return maintain_lst
+
+    def get_valid_tkers(lst_dict): 
+        key_lst = [i for i in lst_dict.keys()]
+        maintain_lst = []
+        len_lst = [len(lst_dict[i]) for i in key_lst]
+        compare_lst = lst_dict[key_lst[len_lst.index(max(len_lst))]]
+        
+        return compare_lst
 
 class alph_api_wrapper(alph_settings): 
 
