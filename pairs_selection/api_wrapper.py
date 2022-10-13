@@ -1,6 +1,6 @@
+import statistics
 import csv
 import requests
-import copy
 
 class alph_settings: 
     def __init__(self, apikey, site, date_range): 
@@ -23,29 +23,37 @@ class val_steps(alph_settings):
             content = csv.reader(decode_content.splitlines(), delimiter = ",")
             lst_dict[i] = list(content)
         return lst_dict
-
-    def tker_maintain(lst_dict):
-        key_lst = [i for i in lst_dict.keys()]
-        maintain_lst = copy.copy(lst_dict[key_lst[0]])
-        counter_lst = [0 for i in range(len(key_lst))]
-        for j in range(len(lst_dict[key_lst[0]])): 
-            chk_lst = [lst_dict[key_lst[i]][j][0] for i in range(len(key_lst))]
-            for k in range(1, len(chk_lst)):
-                if chk_lst[0] == chk_lst[k]: 
-                    print(chk_lst[k])
-                    pass
-                else:
-                    #maintain_lst.pop(j)
-                    pass
-        return maintain_lst
-
+    
+    #wtdf too slow 
     def get_valid_tkers(lst_dict): 
         key_lst = [i for i in lst_dict.keys()]
-        maintain_lst = []
         len_lst = [len(lst_dict[i]) for i in key_lst]
-        compare_lst = lst_dict[key_lst[len_lst.index(max(len_lst))]]
-        
-        return compare_lst
+        if statistics.mean(len_lst) < 1000: 
+            compare_lst = lst_dict[key_lst[len_lst.index(max(len_lst))]]
+            maintain_lst = []
+            for i in compare_lst:
+                for j, jalue in enumerate(key_lst): 
+                    a_chk = []
+                    if i in lst_dict[jalue]: 
+                        a_chk = True
+                    else: 
+                        a_chk.append(jalue)
+                if a_chk == True: 
+                    maintain_lst.append(i)
+                else: 
+                    print(f"{i} was delisted in {min(a_chk)}")
+        else: # write logic for longer lists
+            for i in key_lst: 
+                tker_mat = [lst_dict[i] for i in key_lst]
+            maintain_lst = set.intersection(*[set(list) for list in tker_mat])
+            maintain_lst = tker_mat
+        return maintain_lst
+
+    def method_reverse_lookup(a, b, c):
+        reverse_lookup = {x:i for i, x in enumerate(b)}
+        for i, x in enumerate(a):
+            c[i] = reverse_lookup.get(x, -1)
+        return c
 
 class alph_api_wrapper(alph_settings): 
 
