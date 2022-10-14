@@ -28,7 +28,9 @@ class val_steps(alph_settings):
     def get_valid_tkers(lst_dict): 
         key_lst = [i for i in lst_dict.keys()]
         len_lst = [len(lst_dict[i]) for i in key_lst]
-        if statistics.mean(len_lst) < 1000: 
+        if statistics.mean(len_lst) < 1000: #logic to check shorter lists, can take more than two lists
+            # key_lst = [i for i in lst_dict.keys()]
+            # len_lst = [len(lst_dict[i]) for i in key_lst]
             compare_lst = lst_dict[key_lst[len_lst.index(max(len_lst))]]
             maintain_lst = []
             for i in compare_lst:
@@ -42,11 +44,20 @@ class val_steps(alph_settings):
                     maintain_lst.append(i)
                 else: 
                     print(f"{i} was delisted in {min(a_chk)}")
-        else: # write logic for longer lists
+        else: # write logic for longer lists but assume two dict keys only 
+            key_lst = [i for i in lst_dict.keys()]
             for i in key_lst: 
                 tker_mat = [lst_dict[i] for i in key_lst]
-            maintain_lst = set.intersection(*[set(list) for list in tker_mat])
-            maintain_lst = tker_mat
+            mat1=set(tuple(x) for x in tker_mat[0])
+            mat2=set(tuple(x) for x in tker_mat[1])
+            maintain=set.intersection(mat1,mat2)
+            delist=mat1^mat2
+            maintain_lst=list(list(y) for y in maintain)
+            for j in delist:
+                print(f"{j} was delisted in {key_lst[0]}")
+            # maintain_lst = set.intersection(*[set(list) for list in tker_mat])
+            # maintain_lst = tker_mat
+
         return maintain_lst
 
     def method_reverse_lookup(a, b, c):
