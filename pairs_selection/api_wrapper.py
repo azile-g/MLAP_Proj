@@ -66,6 +66,8 @@ class val_steps(alph_settings):
             c[i] = reverse_lookup.get(x, -1)
         return c
 
+#Improve speed
+
 class alph_api_wrapper(alph_settings): 
 
     def get_search(self, kwd_lst, function = "SYMBOL_SEARCH"):
