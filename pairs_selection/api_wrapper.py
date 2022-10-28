@@ -12,6 +12,7 @@ import requests
 import concurrent.futures 
 
 class alph_settings: 
+    
     def __init__(self, apikey, site, date_range): 
         self.apikey = str(apikey) 
         self.site = str(site) 
@@ -41,7 +42,7 @@ class val_steps(alph_settings):
             lst_dict[i] = list(content)
         return lst_dict
     
-    def get_valid_tkers(lst_dict): 
+    def get_valid_tkers(lst_dict, pretty_print = False): 
         key_lst = [i for i in lst_dict.keys()]
         len_lst = [len(lst_dict[i]) for i in key_lst]
         #logic to check shorter lists, can take more than two lists
@@ -68,8 +69,11 @@ class val_steps(alph_settings):
             maintain=set.intersection(mat1,mat2)
             delist=mat1^mat2
             maintain_lst=list(list(y) for y in maintain)
-            for j in delist:
-                print(f"Excluded: {j[0]}, {j[1]}")
+            if pretty_print == True:
+                for j in delist:
+                    print(f"Excluded: {j[0]}, {j[1]}")
+            else: 
+                pass
         return maintain_lst
 
 class alph_api_wrapper(alph_settings): 
@@ -116,6 +120,24 @@ class alph_api_wrapper(alph_settings):
                 return(url_lst)
                 #raise ValueError("Sorry, list output is unavaliable for multiple slices.")
 
+    def get_general_url(self, function, ticker_lst, datatype, output = "json"): 
+        if output == "json":
+            url_dict = {i: f"{self.site}function={function}&outputsize=full&datatype={datatype}&symbol={i}&apikey={self.apikey}" for i in ticker_lst}
+            return url_dict
+        elif output == "lst": 
+            url_lst = [f"{self.site}function={function}&outputsize=full&datatype={datatype}&symbol={i}&apikey={self.apikey}" for i in ticker_lst]
+            return url_lst
+
+    def get_json_data(url, keys = None, pretty_print = False): 
+        r = requests.get(url)
+        data = r.json()
+        if keys == None: 
+            keys = [i for i in data.keys()]
+        else: 
+            pass
+        info_lst = [data.get(i) for i in keys]
+        return info_lst
+
     def get_csv_data(url, pretty_print = False): 
         with requests.Session() as session: 
             load = session.get(url)
@@ -137,16 +159,35 @@ class alph_api_wrapper(alph_settings):
 
 class threading(alph_api_wrapper): 
 
-    def get_slice(test_urls, slice): 
+    def get_csv_data(urls, wrapper_function = alph_api_wrapper.get_csv_data, slice = None): 
         s = time.time()
         data = {}
         with concurrent.futures.ThreadPoolExecutor() as executor:
-            future_to_url = {executor.submit(alph_api_wrapper.get_csv_data, url = url): slice + "_" + parse_qs(urlparse(url).query).get("symbol")[0] for url in test_urls}
+            if slice == None:
+                future_to_url = {executor.submit(wrapper_function, url = url): parse_qs(urlparse(url).query).get("symbol")[0] for url in urls}
+            else: 
+                future_to_url = {executor.submit(wrapper_function, url = url): slice + "_" + parse_qs(urlparse(url).query).get("symbol")[0] for url in urls}
             for future in concurrent.futures.as_completed(future_to_url):
                 url = future_to_url[future]
                 try:
                     data[url] = future.result()
-                    #print(future.result)
+                except Exception as exc:
+                    print('%r generated an exception: %s' % (url, exc))
+                else:
+                    pass
+        e = time.time()
+        print(f'Total time elapsed: {e-s} seconds')
+        return data
+
+    def get_json_data(urls, wrapper_function, key_lst): 
+        s = time.time()
+        data = {}
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            future_to_url = {executor.submit(wrapper_function, url = url, keys = key_lst): parse_qs(urlparse(url).query).get("symbol")[0] for url in urls}
+            for future in concurrent.futures.as_completed(future_to_url):
+                url = future_to_url[future]
+                try:
+                    data[url] = future.result()
                 except Exception as exc:
                     print('%r generated an exception: %s' % (url, exc))
                 else:
