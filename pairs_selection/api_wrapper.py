@@ -12,7 +12,7 @@ import requests
 import concurrent.futures 
 
 class alph_settings: 
-    
+
     def __init__(self, apikey, site, date_range): 
         self.apikey = str(apikey) 
         self.site = str(site) 
@@ -159,7 +159,7 @@ class alph_api_wrapper(alph_settings):
 
 class threading(alph_api_wrapper): 
 
-    def get_csv_data(urls, wrapper_function = alph_api_wrapper.get_csv_data, slice = None): 
+    def thrd_csv_data(urls, wrapper_function = alph_api_wrapper.get_csv_data, slice = None): 
         s = time.time()
         data = {}
         with concurrent.futures.ThreadPoolExecutor() as executor:
@@ -179,7 +179,7 @@ class threading(alph_api_wrapper):
         print(f'Total time elapsed: {e-s} seconds')
         return data
 
-    def get_json_data(urls, wrapper_function, key_lst): 
+    def thrd_json_data(urls, wrapper_function, key_lst): 
         s = time.time()
         data = {}
         with concurrent.futures.ThreadPoolExecutor() as executor:
