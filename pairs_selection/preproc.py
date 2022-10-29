@@ -27,7 +27,7 @@ class filters(alph_settings):
                     data_dict[i] = data_dict[i].values.tolist()
                 else: 
                     pass
-        return data_dict
+        return data_dict, day_except
 
     def debug_days(data_dict, set_index = "timestamp"): 
         for i in data_dict.keys(): 
@@ -39,23 +39,28 @@ class filters(alph_settings):
         debug_days = debug_days["timestamp"].tolist()
         return debug_days
 
-    def filter_by_feature(data, threshold = 0.5): 
-        #clean out features
-        feature_dict = {}
-        for i in range(len(data[list(data.keys())[0]])):
-            feature_dict[i] = [float(data[j][i]) for j in data.keys()]
-        print(feature_dict)
-        #for i in len(data[list(data.keys())[0]]):
-        #    print(i)
-        #size = len(data)
-        #return sorted(data)[int(math.ceil((size * perc) / 100)) - 1]
+    def cofi_filter(data): 
+        #clean out bad tickers
+        bad_lst = [i for i in data.keys() if "None" in data[i]]
+        filtered_cofi = {i: data[i] for i in data.keys() if "None" not in data[i] and "-" not in data[i]}
+        return bad_lst, filtered_cofi
 
 class make_dfs(): 
 
-    def pivot_data(data_dict, index = 0): 
+    def pivot_data(data_dict, key, index = 0): 
         pca_lst = []
         for i in data_dict.keys(): 
-            pca_lst.append([i] + data_dict[i]["adjusted_close"].tolist() + data_dict[i]["volume"].tolist())
+            pca_lst.append([i] + data_dict[i][key].tolist())
         pca_df = pd.DataFrame(data = pca_lst)
         pca_df = pca_df.set_index(index)
+        pca_df = pca_df.astype(float)
+        return pca_df
+
+    def pivot_cofi(data_dict, index = 0): 
+        pca_lst = []
+        for i in data_dict.keys(): 
+            pca_lst.append([i] + data_dict[i])
+        pca_df = pd.DataFrame(data = pca_lst)
+        pca_df = pca_df.set_index(index)
+        pca_df = pca_df.astype(float)
         return pca_df

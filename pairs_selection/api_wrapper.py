@@ -162,6 +162,7 @@ class threading(alph_api_wrapper):
     def thrd_csv_data(urls, wrapper_function = alph_api_wrapper.get_csv_data, slice = None): 
         s = time.time()
         data = {}
+        hit_again = []
         with concurrent.futures.ThreadPoolExecutor() as executor:
             if slice == None:
                 future_to_url = {executor.submit(wrapper_function, url = url): parse_qs(urlparse(url).query).get("symbol")[0] for url in urls}
@@ -170,28 +171,38 @@ class threading(alph_api_wrapper):
             for future in concurrent.futures.as_completed(future_to_url):
                 url = future_to_url[future]
                 try:
-                    data[url] = future.result()
+                    if len(future.result()) < 5: 
+                        hit_again.append(url)
+                    else: 
+                        data[url] = future.result()
                 except Exception as exc:
                     print('%r generated an exception: %s' % (url, exc))
                 else:
                     pass
         e = time.time()
+        time_it = e-s
         print(f'Total time elapsed: {e-s} seconds')
-        return data
+        return hit_again, time_it, data
 
     def thrd_json_data(urls, wrapper_function, key_lst): 
         s = time.time()
         data = {}
-        with concurrent.futures.ThreadPoolExecutor() as executor:
+        hit_again = []
+        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
             future_to_url = {executor.submit(wrapper_function, url = url, keys = key_lst): parse_qs(urlparse(url).query).get("symbol")[0] for url in urls}
             for future in concurrent.futures.as_completed(future_to_url):
                 url = future_to_url[future]
                 try:
-                    data[url] = future.result()
+                    if None in future.result(): 
+                        hit_again.append(url)
+                    else: 
+                        data[url] = future.result()
                 except Exception as exc:
                     print('%r generated an exception: %s' % (url, exc))
                 else:
                     pass
         e = time.time()
+        timeit = e-s
         print(f'Total time elapsed: {e-s} seconds')
-        return data
+        return hit_again, timeit, data
+
