@@ -1,4 +1,5 @@
 #the usual suspects
+import itertools
 import statistics
 import csv
 import pandas as pd
@@ -108,9 +109,9 @@ class alph_api_wrapper(alph_settings):
                 return url_dict
             elif output == "lst": 
                 url_lst = [f"{self.site}function={function}&symbol={i}&slice={slice}&interval={interval}&adjusted={adjusted}&outputsize={outputsize}&datatype={datatype}&apikey={self.apikey}" for i in ticker_lst]
-        elif len(slice) > 0:
+        elif len(slice) > 1:
             if output == "json":
-                url_dict = {i: {j: f"{self.site}function={function}&symbol={i}&interval={interval}&slice={jalue}&outputsize={outputsize}&adjusted={adjusted}&datatype={datatype}&apikey={self.apikey}" for j, jalue in enumerate(slice)} for i in ticker_lst}
+                url_dict = {i: [f"{self.site}function={function}&symbol={i}&interval={interval}&slice={jalue}&outputsize={outputsize}&adjusted={adjusted}&datatype={datatype}&apikey={self.apikey}" for j, jalue in enumerate(slice)] for i in ticker_lst}
                 return url_dict
             elif output == "lst": 
                 url_lst = []
@@ -158,6 +159,24 @@ class alph_api_wrapper(alph_settings):
         return lst_data
 
 class threading(alph_api_wrapper): 
+
+    def thrd_ticker_slices(urls, wrapper_function = alph_api_wrapper.get_csv_data): 
+        s = time.time()
+        data = []
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            futures = [executor.submit(wrapper_function, url = url) for url in urls]
+        for future in concurrent.futures.as_completed(futures):
+            try:
+                data.append(future.result()[1:])
+            except Exception as exc:
+                print('%r generated an exception: %s' % (exc))
+            else:
+                pass
+        e = time.time()
+        time_it = e-s
+        print(f'Total time elapsed: {time_it} seconds')
+        data = list(itertools.chain.from_iterable(data))
+        return data
 
     def thrd_csv_data(urls, wrapper_function = alph_api_wrapper.get_csv_data, slice = None): 
         s = time.time()
